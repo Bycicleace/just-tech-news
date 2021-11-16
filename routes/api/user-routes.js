@@ -1,10 +1,12 @@
 const router = require('express').Router();
-const { User } = require('../../models/User.js');
+const { User } = require('../../models');
 
 // GET /api/users
 router.get('/', (req, res) => {
     // Access the User model and run .findAll() method
-    User.findAll()
+    User.findAll({
+        attributes: { exclude: ['password'] }
+    })
         .then(dbUserData => res.json(dbUserData))
         .catch(err => {
             console.log(err);
@@ -15,6 +17,7 @@ router.get('/', (req, res) => {
 // GET /api/users/1
 router.get('/:id', (req, res) => {
     User.findOne({
+        attributes: { exclude: ['password'] },
         where: {
             id: req.params.id
         }
@@ -47,10 +50,10 @@ router.post('/', (req, res) => {
 });
 
 // PUT /api/users/1
-router.post('/:id', (req, res) => {
+router.put('/:id', (req, res) => {
     User.update(req.body, {
         where: {
-            id = req.params.id
+            id: req.params.id
         }
     })
         .then(dbUserData => {
