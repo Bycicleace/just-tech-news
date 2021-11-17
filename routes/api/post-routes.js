@@ -1,5 +1,6 @@
 const router = require('express').Router();
-const { Post, User } = require('../../models/index.js');
+const { Post, User, Vote } = require('../../models/index.js');
+const sequelize = require('../../config/connection.js');
 
 router.get('/', (req, res) => {
     console.log('======================');
@@ -59,6 +60,37 @@ router.post('/', (req, res) => {
         });
 });
 
+// PUT /api/posts/upvote
+router.put('/upvote', (req, res) => {
+    Vote.create({
+        user_id: req.body.user_id,
+        post_id: req.body.post_id
+    })
+    .then(() => {
+        // then find the post we just voted on
+        return Post.findOne({
+            where: {
+                id: req.body.post_id
+            },
+            attributes: [
+                'id',
+                'post_url',
+                'title',
+                'created_at',
+                [
+                    sequelize.literal('(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)'),
+                    'vote_count'
+                ]
+            ]
+        })
+        .then(dbPostData => res.json(dbPostData))
+        .catch(err => {
+            console.log(err);
+            res.status(500).json(err);
+        });
+    });
+});
+
 router.put('/:id',(req, res) => {
     Post.update(
         {
@@ -101,5 +133,7 @@ router.delete('/:id', (req, res) => {
             res.status(500).json(err);
         });
 });
+
+
 
 module.exports = router;
